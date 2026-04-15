@@ -1,0 +1,76 @@
+name: Update Monaco Editor
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-monaco:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Update Monaco Editor
+        run: npm install --save-dev monaco-editor@latest
+
+      - name: Resolve Monaco Editor version
+        id: monaco
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./node_modules/monaco-editor/package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Set package version
+        run: npm version "${{ steps.monaco.outputs.version }}" --no-git-tag-version --allow-same-version
+
+      - name: Refresh install and lockfile
+        run: npm install
+
+      - name: Build package
+        run: npm run build
+
+      - name: Detect repository changes
+        id: changes
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- package.json package-lock.json esm min)" ]]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit, tag, and push changes
+        if: steps.changes.outputs.has_changes == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json esm min
+          git commit -m "chore: update monaco-editor to v${{ steps.monaco.outputs.version }}"
+          git tag "${{ steps.monaco.outputs.version }}"
+          git push origin "HEAD:${{ github.ref_name }}"
+          git push origin "${{ steps.monaco.outputs.version }}"
+
+      - name: Create GitHub release
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.monaco.outputs.version }}
+          name: ${{ steps.monaco.outputs.version }}
+          body: |
+            Automated release for Monaco Editor ${{ steps.monaco.outputs.version }}.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
