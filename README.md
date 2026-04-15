@@ -1,5 +1,7 @@
 # @node-projects/monaco-editor-esm
 
+[![npm version](https://img.shields.io/npm/v/@node-projects/monaco-editor-esm.svg?style=flat-square)](https://www.npmjs.com/package/@node-projects/monaco-editor-esm)
+
 ## Real ESM version of Monaco Editor
 
 This package provides a true ESM (EcmaScript Module) build of the [Monaco Editor](https://github.com/microsoft/monaco-editor), suitable for modern build tools and direct browser usage. All JavaScript modules are available in the `/esm` directory, and all required CSS files are in `/min`.
