@@ -1,0 +1,34 @@
+{
+  "name": "monaco-editor-esm",
+  "version": "0.55.1",
+  "description": "esm version of monaco editor",
+  "keywords": [
+    "monaco",
+    "esm"
+  ],
+  "homepage": "https://github.com/node-projects/monaco-editor-esm#readme",
+  "bugs": {
+    "url": "https://github.com/node-projects/monaco-editor-esm/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/node-projects/monaco-editor-esm.git"
+  },
+  "license": "MIT",
+  "author": "Jochen Kühner",
+  "type": "module",
+  "main": "./esm/vs/editor/editor.main.min.js",
+  "style": "./min/vs/editor/editor.main.css/editor.main.css",
+  "scripts": {
+    "build": "node _patchAndMinifyMonaco.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0",
+    "monaco-editor": "^0.55.1"
+  }
+  ,
+  "files": [
+    "min/",
+    "esm/"
+  ]
+}
