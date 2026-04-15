@@ -1,4 +1,4 @@
-# monaco-editor-esm
+# @node-projects/monaco-editor-esm
 
 ## Real ESM version of Monaco Editor
 
@@ -10,32 +10,24 @@ This package provides a true ESM (EcmaScript Module) build of the [Monaco Editor
 
 ### Usage
 
-#### With a Bundler (Webpack, Rollup, Vite, etc.)
 1. Install the package:
    ```sh
-   npm install monaco-editor-esm
+   npm install @node-projects/monaco-editor-esm
    ```
 2. Import the editor in your code:
    ```js
-   import * as monaco from 'monaco-editor-esm/esm/vs/editor/editor.main.js';
+   import * as monaco from '@node-projects/monaco-editor-esm/esm/vs/editor/editor.main.js';
    ```
 3. Make sure to load the required CSS from `/min`:
    ```js
-   import 'monaco-editor-esm/min/vs/editor/editor.main.css';
+   import editorStyle from '@node-projects/monaco-editor-esm/min/vs/editor/editor.main.css' with { type : 'css' };
+   shadowRoot.adoptedStyleSheets.push(editorStyle);
+   // or
+   document.adoptedStyleSheets.push(editorStyle);
    ```
    Or include it in your HTML:
    ```html
-   <link rel="stylesheet" href="node_modules/monaco-editor-esm/min/vs/editor/editor.main.css">
-   ```
-
-#### Directly in the Browser
-- You can import modules from `/esm` using `<script type="module">`, but **CSS imports in JS are not natively supported in browsers**. You must manually include the CSS in your HTML:
-   ```html
-   <link rel="stylesheet" href="path/to/min/vs/editor/editor.main.css">
-   <script type="module">
-     import * as monaco from './esm/vs/editor/editor.main.js';
-     // ...
-   </script>
+   <link rel="stylesheet" href="node_modules/@node-projects/monaco-editor-esm/min/vs/editor/editor.main.css">
    ```
 
 ### CSS Import Caveats
