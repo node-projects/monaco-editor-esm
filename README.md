@@ -39,5 +39,21 @@ This package provides a true ESM (EcmaScript Module) build of the [Monaco Editor
 - Some features may require additional configuration for web workers. See Monaco Editor documentation for details.
 - The ESM build is not guaranteed to be 100% compatible with all Monaco Editor plugins or extensions.
 
+### Updating to a New Monaco Editor Release
+
+When a new version of Monaco Editor is released, update this package by running the `update-monaco` GitHub Actions workflow:
+
+1. Go to the **Actions** tab in your GitHub repository.
+2. Select the **Update Monaco Editor** workflow.
+3. Click **Run workflow** to trigger the update process.
+
+This workflow will:
+- Install the latest Monaco Editor version
+- Update the package version
+- Rebuild the ESM and CSS outputs
+- Commit, tag, and (if configured) create a GitHub release for the new version
+
+After the workflow completes, verify the changes and publish the package if needed.
+
 ### License
 MIT
