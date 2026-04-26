@@ -31,6 +31,11 @@ This package provides a true ESM (EcmaScript Module) build of the [Monaco Editor
    ```html
    <link rel="stylesheet" href="node_modules/@node-projects/monaco-editor-esm/min/vs/editor/editor.main.css">
    ```
+4. Include the CSS in the main document:
+   ```html
+   <link rel="stylesheet" href="node_modules/@node-projects/monaco-editor-esm/min/vs/editor/editor.main.css">
+   ```
+   This is needed, or the monaco font will not work. Cause @font-face rules need to be in root html.
 
 ### CSS Import Caveats
 - The ESM modules may contain `import './file.css'` statements, which are not yet supported natively in browsers or Node.js. Most bundlers can handle these imports with the appropriate loader/plugin.
