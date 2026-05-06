@@ -171,6 +171,12 @@
   <div class="sep"></div>
   <h1>Playground</h1>
   <div class="spacer"></div>
+  <label for="sample-select" style="font-size:.8rem;color:var(--muted)">Sample:</label>
+  <select id="sample-select">
+    <option value="default" selected>Default</option>
+    <option value="webComponent">Web Component</option>
+  </select>
+  <div class="sep"></div>
   <label for="lang-select" style="font-size:.8rem;color:var(--muted)">Language:</label>
   <select id="lang-select">
     <option value="javascript" selected>JavaScript</option>
@@ -263,7 +269,9 @@ function makeWorker(label) {
 self.MonacoEnvironment = { getWorker: (_id, label) => makeWorker(label) };
 
 // ─── Default setup code ──────────────────────────────────────────────────────
-const DEFAULT_CODE = `\
+// ─── Samples ─────────────────────────────────────────────────────────────────
+const SAMPLES = {
+  default: `\
 // This code runs every time you click ▶ Run.
 // The variable \`monaco\` is already available.
 // Use \`container\` to target the preview pane's host element.
@@ -283,7 +291,61 @@ monaco.editor.create(container, {
   automaticLayout: true,
   minimap: { enabled: false },
 });
-`;
+`,
+  webComponent: `\
+// Monaco Editor inside a Web Component (Shadow DOM)
+// This demonstrates that @node-projects/monaco-editor-esm supports Shadow DOM.
+
+const MONACO_CSS = 'https://cdn.jsdelivr.net/npm/@node-projects/monaco-editor-esm@latest/min/vs/editor/editor.main.css';
+
+class MonacoEditorElement extends HTMLElement {
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: 'open' });
+
+    // Add Monaco CSS inside the shadow root
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = MONACO_CSS;
+    shadow.appendChild(link);
+
+    // Editor host div
+    const div = document.createElement('div');
+    div.style.cssText = 'position:absolute;inset:0';
+    shadow.appendChild(div);
+    this.style.cssText = 'display:block;position:absolute;inset:0';
+
+    link.onload = () => {
+      monaco.editor.create(div, {
+        value: [
+          '// Monaco Editor inside a Web Component!',
+          '',
+          'class Greeter {',
+          '  greet(name) { return \`Hello, \${name}!\`; }',
+          '}',
+          '',
+          'new Greeter().greet("Shadow DOM");',
+        ].join('\\n'),
+        language: 'javascript',
+        theme: 'vs-dark',
+        automaticLayout: true,
+        minimap: { enabled: false },
+      });
+    };
+  }
+}
+
+if (!customElements.get('monaco-editor-wc')) {
+  customElements.define('monaco-editor-wc', MonacoEditorElement);
+}
+
+container.style.cssText = 'position:relative';
+const el = document.createElement('monaco-editor-wc');
+container.appendChild(el);
+`,
+};
+
+const DEFAULT_CODE = SAMPLES.default;
 
 // ─── Load Monaco once ────────────────────────────────────────────────────────
 let monaco;
@@ -309,7 +371,91 @@ const setupEditor = monaco.editor.create(
   }
 );
 
+// ─── Code completion for monaco / container ───────────────────────────────
+monaco.languages.typescript.javascriptDefaults.addExtraLib(`
+declare const container: HTMLElement;
+declare namespace monaco {
+  namespace editor {
+    function create(container: HTMLElement, options?: IStandaloneEditorConstructionOptions): IStandaloneCodeEditor;
+    function setTheme(theme: string): void;
+    function setModelLanguage(model: ITextModel, languageId: string): void;
+    function getEditors(): ICodeEditor[];
+    interface IStandaloneEditorConstructionOptions {
+      value?: string;
+      language?: string;
+      theme?: string;
+      automaticLayout?: boolean;
+      minimap?: { enabled?: boolean; size?: 'proportional' | 'fill' | 'actual' };
+      fontSize?: number;
+      readOnly?: boolean;
+      wordWrap?: 'off' | 'on' | 'wordWrapColumn' | 'bounded';
+      lineNumbers?: 'on' | 'off' | 'relative' | 'interval';
+      scrollBeyondLastLine?: boolean;
+      folding?: boolean;
+      glyphMargin?: boolean;
+      tabSize?: number;
+      insertSpaces?: boolean;
+      renderWhitespace?: 'none' | 'boundary' | 'selection' | 'trailing' | 'all';
+      renderLineHighlight?: 'none' | 'gutter' | 'line' | 'all';
+      cursorStyle?: 'line' | 'block' | 'underline' | 'line-thin' | 'block-outline' | 'underline-thin';
+      cursorBlinking?: 'blink' | 'smooth' | 'phase' | 'expand' | 'solid';
+      scrollbar?: { vertical?: 'auto' | 'visible' | 'hidden'; horizontal?: 'auto' | 'visible' | 'hidden'; verticalScrollbarSize?: number; horizontalScrollbarSize?: number };
+      suggest?: { showKeywords?: boolean; showSnippets?: boolean };
+      quickSuggestions?: boolean | { other?: boolean; comments?: boolean; strings?: boolean };
+      acceptSuggestionOnEnter?: 'on' | 'smart' | 'off';
+      bracketPairColorization?: { enabled?: boolean };
+      guides?: { bracketPairs?: boolean | 'active'; indentation?: boolean };
+      padding?: { top?: number; bottom?: number };
+      stickyScroll?: { enabled?: boolean };
+      contextmenu?: boolean;
+      smoothScrolling?: boolean;
+      fontFamily?: string;
+      fontLigatures?: boolean | string;
+      fontWeight?: string;
+      letterSpacing?: number;
+      lineHeight?: number;
+    }
+    interface IStandaloneCodeEditor {
+      getValue(): string;
+      setValue(value: string): void;
+      getModel(): ITextModel | null;
+      dispose(): void;
+      focus(): void;
+      layout(dimension?: { width: number; height: number }): void;
+      onDidChangeModelContent(listener: (e: any) => void): { dispose(): void };
+    }
+    interface ITextModel {
+      getValue(): string;
+      setValue(value: string): void;
+      getLanguageId(): string;
+      dispose(): void;
+    }
+    interface ICodeEditor extends IStandaloneCodeEditor {}
+  }
+  namespace languages {
+    namespace typescript {
+      const javascriptDefaults: { addExtraLib(content: string, filePath?: string): { dispose(): void }; setCompilerOptions(options: any): void };
+      const typescriptDefaults: { addExtraLib(content: string, filePath?: string): { dispose(): void }; setCompilerOptions(options: any): void };
+    }
+    function register(language: { id: string }): void;
+    function registerCompletionItemProvider(languageId: string, provider: any): { dispose(): void };
+    function setMonarchTokensProvider(languageId: string, languageDef: any): { dispose(): void };
+  }
+  const KeyMod: { CtrlCmd: number; Shift: number; Alt: number; WinCtrl: number };
+  const KeyCode: { [key: string]: number };
+}
+`, 'ts:monaco-playground.d.ts');
+
 // ─── Language / Theme selectors ───────────────────────────────────────────
+// ─── Sample selector ──────────────────────────────────────────────────────
+document.getElementById('sample-select').addEventListener('change', (e) => {
+  const sample = SAMPLES[e.target.value];
+  if (sample) {
+    setupEditor.setValue(sample);
+    runSetupCode();
+  }
+});
+
 document.getElementById('lang-select').addEventListener('change', (e) => {
   monaco.editor.setModelLanguage(setupEditor.getModel(), e.target.value);
 });
