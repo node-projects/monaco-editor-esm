@@ -231,13 +231,36 @@
 <link
   rel="stylesheet"
   id="monaco-css"
-  href="https://unpkg.com/@node-projects/monaco-editor-esm@latest/min/vs/editor/editor.main.css"
+  href="https://cdn.jsdelivr.net/npm/@node-projects/monaco-editor-esm@latest/min/vs/editor/editor.main.css"
 />
 
 <script type="module">
 // ─── CDN base ────────────────────────────────────────────────────────────────
-const CDN = 'https://unpkg.com/@node-projects/monaco-editor-esm@latest';
-const MONACO_MAIN = `${CDN}/esm/vs/editor/editor.main.js`;
+const CDN = 'https://cdn.jsdelivr.net/npm/@node-projects/monaco-editor-esm@latest';
+const MONACO_MAIN = `${CDN}/esm/vs/editor/editor.main.min.js`;
+
+// ─── Workers: use a same-origin blob that imports the cross-origin worker ────
+// Chrome/Firefox both allow module workers from blob: URLs that import() other
+// origins, as long as the remote script is served with CORS headers (jsDelivr ✓).
+function makeWorker(label) {
+  const workerMap = {
+    json:        'json.worker.js',
+    css:         'css.worker.js',
+    scss:        'css.worker.js',
+    less:        'css.worker.js',
+    html:        'html.worker.js',
+    handlebars:  'html.worker.js',
+    razor:       'html.worker.js',
+    typescript:  'ts.worker.js',
+    javascript:  'ts.worker.js',
+  };
+  const file = workerMap[label] ?? 'editor.worker.js';
+  const url  = `${CDN}/esm/vs/editor/${file}`;
+  const blob = new Blob([`import "${url}";`], { type: 'text/javascript' });
+  return new Worker(URL.createObjectURL(blob), { type: 'module' });
+}
+
+self.MonacoEnvironment = { getWorker: (_id, label) => makeWorker(label) };
 
 // ─── Default setup code ──────────────────────────────────────────────────────
 const DEFAULT_CODE = `\
@@ -263,7 +286,14 @@ monaco.editor.create(container, {
 `;
 
 // ─── Load Monaco once ────────────────────────────────────────────────────────
-const monaco = await import(MONACO_MAIN);
+let monaco;
+try {
+  monaco = await import(MONACO_MAIN);
+} catch (err) {
+  document.getElementById('error-bar').style.display = 'block';
+  document.getElementById('error-bar').textContent = 'Failed to load Monaco: ' + err;
+  throw err;
+}
 
 // ─── Setup editor (left pane) ─────────────────────────────────────────────
 const setupEditor = monaco.editor.create(
