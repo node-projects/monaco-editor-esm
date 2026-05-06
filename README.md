@@ -20,16 +20,20 @@ This package provides a true ESM (EcmaScript Module) build of the [Monaco Editor
    ```js
    import * as monaco from '@node-projects/monaco-editor-esm/esm/vs/editor/editor.main.js';
    ```
-3. Make sure to load the required CSS from `/min`:
-   ```js
-   import editorStyle from '@node-projects/monaco-editor-esm/min/vs/editor/editor.main.css' with { type : 'css' };
-   shadowRoot.adoptedStyleSheets.push(editorStyle);
-   // or
-   document.adoptedStyleSheets.push(editorStyle);
-   ```
-   Or include it in your HTML:
+3. Always include the CSS via a `<link>` tag in your **main HTML file** (`index.html`):
    ```html
    <link rel="stylesheet" href="node_modules/@node-projects/monaco-editor-esm/min/vs/editor/editor.main.css">
+   ```
+   > **Important:** The CSS **must** be loaded through a `<link>` element in the top-level document.
+   > Monaco's CSS contains `@font-face` declarations (for Codicon icons), and `@font-face` rules inside
+   > `adoptedStyleSheets` or Shadow DOM stylesheets are [ignored by browsers](https://github.com/WICG/construct-stylesheets/issues/119).
+   > If you skip the `<link>`, editor icons will not render correctly.
+
+   If you are building a Web Component and still want to adopt the stylesheet for scoped styles, keep the
+   `<link>` in the host document **and** optionally adopt for the shadow root:
+   ```js
+   import editorStyle from '@node-projects/monaco-editor-esm/min/vs/editor/editor.main.css' with { type: 'css' };
+   shadowRoot.adoptedStyleSheets.push(editorStyle);
    ```
 
 ### CSS Import Caveats

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@node-projects/monaco-editor-esm</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --code-bg: #1f2428;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      height: 60px;
+    }
+    nav .logo {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+    nav .logo span { color: var(--accent); }
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color .15s;
+    }
+    nav a:hover { color: var(--text); }
+    nav .spacer { flex: 1; }
+    nav .badge {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      color: var(--accent2);
+      font-family: monospace;
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 5rem 2rem 4rem;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .hero h1 .hl { color: var(--accent); }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+    .btn-row {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .7rem 1.5rem;
+      border-radius: 8px;
+      font-size: .95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn:hover { opacity: .85; transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: #0d1117; }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    /* FEATURES */
+    .section {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+    .section h2 {
+      font-size: 1.6rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: .75rem;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.4rem;
+    }
+    .card h3 { font-size: 1rem; margin-bottom: .45rem; }
+    .card p { font-size: .9rem; color: var(--muted); }
+    .card .icon { font-size: 1.5rem; margin-bottom: .6rem; }
+
+    /* INSTALL */
+    .install-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem 1.75rem;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: .95rem;
+      position: relative;
+      overflow-x: auto;
+    }
+    .install-block .comment { color: var(--muted); }
+    .install-block .cmd { color: var(--accent2); }
+    .install-block .import { color: var(--accent); }
+    .install-block .str { color: #a5d6ff; }
+
+    /* USAGE STEPS */
+    .steps { display: flex; flex-direction: column; gap: 1.5rem; }
+    .step { display: flex; gap: 1rem; align-items: flex-start; }
+    .step-num {
+      flex-shrink: 0;
+      width: 2rem; height: 2rem;
+      background: var(--accent);
+      color: #0d1117;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .9rem;
+    }
+    .step-body h3 { font-size: .95rem; margin-bottom: .3rem; }
+    .step-body p { font-size: .88rem; color: var(--muted); }
+    pre code {
+      display: block;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .7rem 1rem;
+      font-size: .85rem;
+      margin-top: .5rem;
+      overflow-x: auto;
+      color: var(--accent);
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">@node-projects/<span>monaco-editor-esm</span></a>
+  <a href="playground.html">Playground</a>
+  <a href="https://github.com/node-projects/monaco-editor-esm" target="_blank">GitHub</a>
+  <a href="https://www.npmjs.com/package/@node-projects/monaco-editor-esm" target="_blank">npm</a>
+  <span class="spacer"></span>
+  <span class="badge">v0.55.x</span>
+</nav>
+
+<section class="hero">
+  <h1>Monaco Editor<br><span class="hl">True ESM Build</span></h1>
+  <p>
+    A native ES-module build of the Monaco Editor — no AMD, no CommonJS, no bundler magic required.
+    Import directly in the browser or wire into any modern bundler.
+  </p>
+  <div class="btn-row">
+    <a class="btn btn-primary" href="playground.html">▶ Open Playground</a>
+    <a class="btn btn-secondary" href="https://github.com/node-projects/monaco-editor-esm" target="_blank">⭐ View on GitHub</a>
+    <a class="btn btn-secondary" href="https://www.npmjs.com/package/@node-projects/monaco-editor-esm" target="_blank">📦 npm</a>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Why this package?</h2>
+  <div class="features">
+    <div class="card">
+      <div class="icon">⚡</div>
+      <h3>Native ESM</h3>
+      <p>All modules are true <code>import</code>/<code>export</code> ES modules — no AMD loader, no <code>require()</code>.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🌐</div>
+      <h3>Works in the Browser</h3>
+      <p>Import directly from a CDN or <code>node_modules</code> with a bare <code>&lt;script type="module"&gt;</code>.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🔗</div>
+      <h3>Bundler Friendly</h3>
+      <p>Full compatibility with Vite, Rollup, Webpack, esbuild, and other modern build tools via standard ESM exports.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🎨</div>
+      <h3>CSS Included</h3>
+      <p>All required styles are in <code>/min</code>. Adopt them as a <code>CSSStyleSheet</code> or via a plain <code>&lt;link&gt;</code>.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🔄</div>
+      <h3>Auto-updated</h3>
+      <p>A GitHub Actions workflow tracks Monaco Editor releases and updates this package automatically.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🪶</div>
+      <h3>Same API</h3>
+      <p>100% Monaco Editor API — no wrapper, no abstraction. Switch from the official package with a one-line import change.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Quick Start</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Install</h3>
+        <pre><code>npm install @node-projects/monaco-editor-esm</code></pre>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Import the editor</h3>
+        <pre><code>import * as monaco from '@node-projects/monaco-editor-esm/esm/vs/editor/editor.main.js';</code></pre>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Load the CSS in your HTML file</h3>
+        <p>
+          Always add this <code>&lt;link&gt;</code> to your top-level <strong>index.html</strong>.
+          Monaco's CSS contains <code>@font-face</code> rules for the Codicon icon font —
+          browsers ignore <code>@font-face</code> inside <code>adoptedStyleSheets</code> or
+          Shadow DOM, so the link tag in the main document is required for icons to render.
+        </p>
+        <pre><code>&lt;link rel="stylesheet" href="node_modules/@node-projects/monaco-editor-esm/min/vs/editor/editor.main.css"&gt;</code></pre>
+        <p style="margin-top:.5rem">
+          If you are using a Web Component you may additionally adopt the sheet for scoped styles,
+          but the top-level <code>&lt;link&gt;</code> must still be present:
+        </p>
+        <pre><code>import editorStyle from '@node-projects/monaco-editor-esm/min/vs/editor/editor.main.css' with { type: 'css' };
+shadowRoot.adoptedStyleSheets.push(editorStyle);</code></pre>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Create an editor instance</h3>
+        <pre><code>const editor = monaco.editor.create(document.getElementById('container'), {
+  value: 'console.log("Hello, Monaco!");',
+  language: 'javascript',
+  theme: 'vs-dark',
+});</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Released under the <a href="https://github.com/node-projects/monaco-editor-esm/blob/main/LICENSE" target="_blank">MIT License</a> &middot;
+    Built by <a href="https://github.com/node-projects" target="_blank">node-projects</a> &middot;
+    Based on <a href="https://github.com/microsoft/monaco-editor" target="_blank">Monaco Editor by Microsoft</a>
+  </p>
+</footer>
+
+</body>
+</html>

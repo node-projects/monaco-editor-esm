@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Playground – @node-projects/monaco-editor-esm</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --toolbar-h: 50px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      display: flex;
+      flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* TOOLBAR */
+    .toolbar {
+      height: var(--toolbar-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0 1rem;
+      flex-shrink: 0;
+    }
+    .toolbar .logo {
+      font-weight: 700;
+      font-size: .9rem;
+      color: var(--text);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .toolbar .logo span { color: var(--accent); }
+    .toolbar .sep { width: 1px; height: 22px; background: var(--border); }
+    .toolbar h1 { font-size: .9rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+    .spacer { flex: 1; }
+    .toolbar select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: .8rem;
+    }
+    .toolbar select:focus { outline: none; border-color: var(--accent); }
+    .btn-run {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: var(--accent2);
+      color: #0d1117;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 14px;
+      font-size: .85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-run:hover { opacity: .85; }
+    .btn-home {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .85rem;
+      transition: color .15s;
+    }
+    .btn-home:hover { color: var(--text); }
+
+    /* MAIN SPLIT */
+    .split {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+    .pane {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+    }
+    .pane-header {
+      height: 34px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 .85rem;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .pane-header .hint {
+      margin-left: auto;
+      font-size: .72rem;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--muted);
+      opacity: .7;
+    }
+    .divider {
+      width: 5px;
+      background: var(--border);
+      cursor: col-resize;
+      flex-shrink: 0;
+      transition: background .15s;
+    }
+    .divider:hover, .divider.dragging { background: var(--accent); }
+    .editor-wrap {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+    }
+    .editor-wrap > div {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* PREVIEW PANE */
+    .preview-pane {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+    }
+    #preview-container {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      background: #1e1e1e; /* matches vs-dark */
+    }
+    #preview-editor {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* ERROR BAR */
+    #error-bar {
+      display: none;
+      background: #3a1a1a;
+      border-top: 1px solid #6e2020;
+      color: #f97583;
+      font-family: monospace;
+      font-size: .8rem;
+      padding: 6px 1rem;
+      flex-shrink: 0;
+      white-space: pre-wrap;
+      max-height: 80px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+<div class="toolbar">
+  <a class="logo" href="index.html">@node-projects/<span>monaco-editor-esm</span></a>
+  <div class="sep"></div>
+  <h1>Playground</h1>
+  <div class="spacer"></div>
+  <label for="lang-select" style="font-size:.8rem;color:var(--muted)">Language:</label>
+  <select id="lang-select">
+    <option value="javascript" selected>JavaScript</option>
+    <option value="typescript">TypeScript</option>
+    <option value="html">HTML</option>
+    <option value="css">CSS</option>
+    <option value="json">JSON</option>
+    <option value="python">Python</option>
+    <option value="rust">Rust</option>
+    <option value="go">Go</option>
+    <option value="csharp">C#</option>
+    <option value="cpp">C++</option>
+    <option value="markdown">Markdown</option>
+    <option value="sql">SQL</option>
+  </select>
+  <label for="theme-select" style="font-size:.8rem;color:var(--muted)">Theme:</label>
+  <select id="theme-select">
+    <option value="vs-dark" selected>Dark</option>
+    <option value="vs">Light</option>
+    <option value="hc-black">High Contrast Dark</option>
+    <option value="hc-light">High Contrast Light</option>
+  </select>
+  <button class="btn-run" id="run-btn">▶ Run</button>
+  <a class="btn-home" href="index.html">← Home</a>
+</div>
+
+<div class="split" id="split">
+  <!-- LEFT: Code editor -->
+  <div class="pane" id="left-pane">
+    <div class="pane-header">
+      Setup Code
+      <span class="hint">Edit the code that creates the preview editor →</span>
+    </div>
+    <div class="editor-wrap">
+      <div id="setup-editor"></div>
+    </div>
+  </div>
+
+  <div class="divider" id="divider"></div>
+
+  <!-- RIGHT: Preview pane -->
+  <div class="preview-pane" id="right-pane">
+    <div class="pane-header">
+      Live Preview
+      <span class="hint">The editor created by your setup code</span>
+    </div>
+    <div id="preview-container">
+      <div id="preview-editor"></div>
+    </div>
+    <div id="error-bar"></div>
+  </div>
+</div>
+
+<!--
+  Load Monaco from unpkg CDN (this very package).
+  We bootstrap the editor's CSS the same way a user would.
+-->
+<link
+  rel="stylesheet"
+  id="monaco-css"
+  href="https://unpkg.com/@node-projects/monaco-editor-esm@latest/min/vs/editor/editor.main.css"
+/>
+
+<script type="module">
+// ─── CDN base ────────────────────────────────────────────────────────────────
+const CDN = 'https://unpkg.com/@node-projects/monaco-editor-esm@latest';
+const MONACO_MAIN = `${CDN}/esm/vs/editor/editor.main.js`;
+
+// ─── Default setup code ──────────────────────────────────────────────────────
+const DEFAULT_CODE = `\
+// This code runs every time you click ▶ Run.
+// The variable \`monaco\` is already available.
+// Use \`container\` to target the preview pane's host element.
+
+monaco.editor.create(container, {
+  value: [
+    '// Welcome to @node-projects/monaco-editor-esm',
+    '',
+    'function greet(name) {',
+    '  return \`Hello, \${name}!\`;',
+    '}',
+    '',
+    'console.log(greet("Monaco"));',
+  ].join('\\n'),
+  language: 'javascript',
+  theme: 'vs-dark',
+  automaticLayout: true,
+  minimap: { enabled: false },
+});
+`;
+
+// ─── Load Monaco once ────────────────────────────────────────────────────────
+const monaco = await import(MONACO_MAIN);
+
+// ─── Setup editor (left pane) ─────────────────────────────────────────────
+const setupEditor = monaco.editor.create(
+  document.getElementById('setup-editor'),
+  {
+    value: DEFAULT_CODE,
+    language: 'javascript',
+    theme: 'vs-dark',
+    automaticLayout: true,
+    minimap: { enabled: false },
+    fontSize: 14,
+    scrollBeyondLastLine: false,
+  }
+);
+
+// ─── Language / Theme selectors ───────────────────────────────────────────
+document.getElementById('lang-select').addEventListener('change', (e) => {
+  monaco.editor.setModelLanguage(setupEditor.getModel(), e.target.value);
+});
+document.getElementById('theme-select').addEventListener('change', (e) => {
+  monaco.editor.setTheme(e.target.value);
+});
+
+// ─── Run / preview ────────────────────────────────────────────────────────
+let previewEditorInstance = null;
+
+function showError(msg) {
+  const bar = document.getElementById('error-bar');
+  bar.textContent = msg;
+  bar.style.display = 'block';
+}
+function clearError() {
+  const bar = document.getElementById('error-bar');
+  bar.textContent = '';
+  bar.style.display = 'none';
+}
+
+function runSetupCode() {
+  clearError();
+
+  // Dispose previous preview editor
+  if (previewEditorInstance) {
+    previewEditorInstance.dispose();
+    previewEditorInstance = null;
+  }
+
+  const container = document.getElementById('preview-editor');
+  // Clear the container
+  container.innerHTML = '';
+
+  const code = setupEditor.getValue();
+
+  try {
+    // Execute the user's setup code with `monaco` and `container` in scope.
+    const fn = new Function('monaco', 'container', code); // eslint-disable-line no-new-func
+    const result = fn(monaco, container);
+    // If the user returned an editor, keep a reference for disposal.
+    if (result && typeof result.dispose === 'function') {
+      previewEditorInstance = result;
+    } else {
+      // Try to find newly created editor by querying monaco's editors list.
+      const editors = monaco.editor.getEditors();
+      for (const ed of editors) {
+        if (ed !== setupEditor) {
+          previewEditorInstance = ed;
+          break;
+        }
+      }
+    }
+  } catch (err) {
+    showError(String(err));
+    console.error(err);
+  }
+}
+
+document.getElementById('run-btn').addEventListener('click', runSetupCode);
+
+// Ctrl+Enter / Cmd+Enter shortcut
+window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    runSetupCode();
+  }
+});
+
+// Run once on load
+runSetupCode();
+
+// ─── Resizable divider ────────────────────────────────────────────────────
+const divider = document.getElementById('divider');
+const leftPane = document.getElementById('left-pane');
+const rightPane = document.getElementById('right-pane');
+const split = document.getElementById('split');
+
+let dragging = false;
+let startX = 0;
+let startLeftW = 0;
+
+divider.addEventListener('mousedown', (e) => {
+  dragging = true;
+  startX = e.clientX;
+  startLeftW = leftPane.getBoundingClientRect().width;
+  divider.classList.add('dragging');
+  document.body.style.userSelect = 'none';
+  document.body.style.cursor = 'col-resize';
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!dragging) return;
+  const totalW = split.getBoundingClientRect().width - divider.offsetWidth;
+  const delta = e.clientX - startX;
+  const newLeft = Math.min(Math.max(startLeftW + delta, 200), totalW - 200);
+  leftPane.style.flex = 'none';
+  leftPane.style.width = newLeft + 'px';
+  rightPane.style.flex = '1';
+});
+
+window.addEventListener('mouseup', () => {
+  if (dragging) {
+    dragging = false;
+    divider.classList.remove('dragging');
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+  }
+});
+</script>
+</body>
+</html>
