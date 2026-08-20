@@ -1,6 +1,6 @@
 {
   "name": "@node-projects/monaco-editor-esm",
-  "version": "0.55.1",
+  "version": "0.56.0",
   "description": "A real ESM (EcmaScript Module) build of the Monaco Editor, suitable for modern build tools and direct browser usage. This package provides the Monaco Editor as native JavaScript modules in the /esm directory, and all required CSS in /min.\n\nNote: Due to current browser and JavaScript limitations, CSS imports in ESM modules are not natively supported in all environments. You may need to handle CSS loading manually or with a bundler. See README for details.",
   "keywords": [
     "monaco",
@@ -24,9 +24,8 @@
   },
   "devDependencies": {
     "esbuild": "^0.28.0",
-    "monaco-editor": "^0.55.1"
-  }
-  ,
+    "monaco-editor": "^0.56.0"
+  },
   "files": [
     "min/",
     "esm/"
