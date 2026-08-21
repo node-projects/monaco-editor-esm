@@ -61,5 +61,19 @@ This workflow will:
 
 After the workflow completes, verify the changes and publish the package if needed.
 
+For a local release, run:
+
+```sh
+npm run prepublish:local
+npm pack
+npm publish --access public
+```
+
+The local prepublish command updates direct npm dependencies, reinstalls a
+pristine Monaco Editor package, aligns this package version with Monaco, then
+builds, minifies, and verifies the publish output. Both `npm pack` and
+`npm publish` also run the `prepack` lifecycle to rebuild and verify the
+required entry points immediately before npm creates the tarball.
+
 ### License
 MIT

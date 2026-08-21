@@ -4,8 +4,8 @@ import path from 'path';
 
 const target = './esm';
 const monacoEsm = './node_modules/monaco-editor/esm';
-const outDir = `${monacoEsm}/vs/editor`;
-const absOutDir = path.resolve(outDir);
+const outDir = `${target}/vs/editor`;
+let cleanedFileCount = 0;
 
 // --- Patch: remove CSS imports (esbuild can't handle them) ---
 function walkDir(dir, callback) {
@@ -24,7 +24,7 @@ function removeCssImports(filePath) {
   const content = original.replace(/^\s*import\s+[^;]*['"]([^'"]+\.css)['"]\s*;?\s*$/gm, '');
   if (content !== original) {
     fs.writeFileSync(filePath, content, 'utf8');
-    console.log('Cleaned:', filePath);
+    cleanedFileCount++;
   }
 }
 
@@ -49,16 +49,17 @@ function copyFolderRecursive(source, target) {
 }
 
 if (fs.existsSync(target)) {
-  fs.rmdirSync(target, { recursive: true, force: true });
+  fs.rmSync(target, { recursive: true, force: true });
 }
 if (fs.existsSync('./min')) {
-  fs.rmdirSync('./min', { recursive: true, force: true });
+  fs.rmSync('./min', { recursive: true, force: true });
 }
 copyFolderRecursive(monacoEsm, target);
 fs.mkdirSync('./min/vs/editor', { recursive: true });
 fs.copyFileSync('./node_modules/monaco-editor/min/vs/editor/editor.main.css', `./min/vs/editor/editor.main.css`);
 
 walkDir(path.resolve(target), removeCssImports);
+console.log(`Removed CSS imports from ${cleanedFileCount} JavaScript file(s)`);
 fs.rmSync('./node_modules/monaco-editor/dev', { recursive: true, force: true });
 
 // --- Patch: fix shadow DOM mouse event handling ---
@@ -71,7 +72,25 @@ const patchedMouseHandler = mouseHandlerCode.replace(
 if (patchedMouseHandler !== mouseHandlerCode) {
   fs.writeFileSync(mouseHandlerPath, patchedMouseHandler);
   console.log('Patched monaco editor mouseHandler');
+} else {
+  throw new Error(`Could not apply the mouse handler patch to ${mouseHandlerPath}`);
 }
+
+// Resolve worker entry points before writing bundles into the same tree.
+function findWorkers(dir) {
+  const workers = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      workers.push(...findWorkers(full));
+    } else if (entry.isFile() && entry.name.endsWith('.worker.js')) {
+      workers.push(full);
+    }
+  }
+  return workers;
+}
+
+const workerFiles = findWorkers(target);
 
 // --- Bundle: main editor ---
 await esbuild.build({
@@ -87,22 +106,6 @@ await esbuild.build({
 }).catch(() => process.exit(1));
 
 // --- Bundle: language workers ---
-// Find all *.worker.js files outside outDir and bundle them there so that
-// import.meta.url-relative paths in the split chunks resolve correctly.
-function findWorkers(dir) {
-  const workers = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      workers.push(...findWorkers(full));
-    } else if (entry.isFile() && entry.name.endsWith('.worker.js') && path.resolve(dir) !== absOutDir) {
-      workers.push(full);
-    }
-  }
-  return workers;
-}
-
-const workerFiles = findWorkers(target);
 console.log(`Bundling ${workerFiles.length} worker(s) into ${outDir}`);
 
 for (const workerFile of workerFiles) {
@@ -112,6 +115,7 @@ for (const workerFile of workerFiles) {
     outdir: outDir,
     entryNames: name,
     bundle: true,
+    minify: true,
     format: 'esm',
     platform: 'neutral',
     external: ['dompurify'],
